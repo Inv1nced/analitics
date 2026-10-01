@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Полигон аналитика</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12151F; --bg2:#171C29; --panel:#1E2434; --rule:#2C3449; --rule2:#3A4463;
+  --text:#DFE3EE; --dim:#8690AC; --faint:#5C6684;
+  --accent:#E9A13B; --ok:#5BC9A6; --err:#E0695E; --link:#8FB4F2;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --ui:'Golos Text',system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ui);font-size:15px;line-height:1.6}
+a{color:var(--link)}
+button{font-family:inherit}
+
+/* ---------- шапка ---------- */
+header{border-bottom:1px solid var(--rule);background:var(--bg2);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.bar{max-width:1240px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:17px;letter-spacing:-.01em;margin-right:4px}
+.brand span{color:var(--accent)}
+nav{display:flex;gap:2px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--dim);padding:6px 12px;border-radius:7px;cursor:pointer;font-size:14px}
+nav button:hover{color:var(--text)}
+nav button[aria-current="true"]{color:var(--text);border-color:var(--rule2);background:var(--panel)}
+nav button:focus-visible,.t-item:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.counter{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--dim);white-space:nowrap}
+.counter b{color:var(--accent);font-weight:700}
+
+main{max-width:1240px;margin:0 auto;padding:18px}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- тренажёр ---------- */
+.lab{display:grid;grid-template-columns:272px 1fr;gap:18px;align-items:start}
+@media(max-width:860px){.lab{grid-template-columns:1fr}}
+
+.side{background:var(--bg2);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.grp{border-bottom:1px solid var(--rule)}
+.grp:last-child{border-bottom:0}
+.grp h3{margin:0;padding:11px 14px 7px;font-size:12px;font-weight:600;color:var(--faint);letter-spacing:.02em}
+.t-item{display:flex;gap:9px;align-items:baseline;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;color:var(--dim);padding:7px 14px;cursor:pointer;font-size:13.5px;line-height:1.35}
+.t-item:hover{color:var(--text);background:var(--panel)}
+.t-item[aria-current="true"]{color:var(--text);background:var(--panel);border-left-color:var(--accent)}
+.t-item .n{font-family:var(--mono);font-size:11.5px;color:var(--faint);min-width:17px}
+.t-item.done .n{color:var(--ok)}
+.t-item.done .n::after{content:"✓";margin-left:1px}
+
+.work{min-width:0}
+.card{background:var(--bg2);border:1px solid var(--rule);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+.task-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.task-h h2{margin:0;font-size:19px;letter-spacing:-.01em;font-weight:600}
+.tag{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--rule2);border-radius:5px;padding:1px 6px}
+.prompt{margin:8px 0 0}
+.note{margin:12px 0 0;padding:11px 13px;background:var(--panel);border-left:2px solid var(--rule2);border-radius:0 7px 7px 0;font-size:14px;color:#C6CDE0}
+.note code,.prompt code,p code,li code{font-family:var(--mono);font-size:.88em;background:#121725;padding:1px 5px;border-radius:4px;color:#E7C58A}
+
+textarea{width:100%;min-height:148px;background:#0E1119;color:#E6EAF5;border:1px solid var(--rule2);border-radius:8px;padding:12px;font-family:var(--mono);font-size:13.5px;line-height:1.55;resize:vertical;tab-size:2}
+textarea:focus{outline:none;border-color:var(--accent)}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.btn{background:var(--panel);color:var(--text);border:1px solid var(--rule2);border-radius:8px;padding:8px 15px;cursor:pointer;font-size:14px}
+.btn:hover{border-color:var(--faint)}
+.btn.main{background:var(--accent);border-color:var(--accent);color:#1A1405;font-weight:600}
+.btn.main:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45;cursor:default}
+
+.verdict{margin-top:12px;padding:11px 13px;border-radius:8px;font-size:14.5px;display:none}
+.verdict.on{display:block}
+.verdict.good{background:rgba(91,201,166,.1);border:1px solid rgba(91,201,166,.4);color:#9BE3CC}
+.verdict.bad{background:rgba(224,105,94,.09);border:1px solid rgba(224,105,94,.38);color:#F0A9A2}
+
+.out{margin-top:12px;overflow-x:auto;border:1px solid var(--rule);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel);text-align:left;padding:7px 11px;border-bottom:1px solid var(--rule2);color:var(--dim);font-weight:500}
+td{padding:6px 11px;border-bottom:1px solid #222942;color:#CFD6E8}
+tr:last-child td{border-bottom:0}
+.meta{font-family:var(--mono);font-size:12px;color:var(--faint);padding:7px 11px}
+
+details{margin-top:11px;border-top:1px solid var(--rule);padding-top:10px}
+summary{cursor:pointer;color:var(--dim);font-size:14px}
+summary:hover{color:var(--text)}
+pre{background:#0E1119;border:1px solid var(--rule);border-radius:8px;padding:12px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.5;margin:10px 0 0;color:#D8DEEE}
+
+/* ---------- схема ---------- */
+.schema{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:10px;margin-top:10px}
+.tbl{border:1px solid var(--rule2);border-radius:8px;overflow:hidden;font-family:var(--mono);font-size:11.5px}
+.tbl b{display:block;background:var(--panel);padding:5px 9px;color:var(--accent);font-size:12px;border-bottom:1px solid var(--rule2)}
+.tbl span{display:block;padding:2px 9px;color:var(--dim)}
+.tbl span:first-of-type{padding-top:6px}
+.tbl span:last-child{padding-bottom:6px}
+
+/* ---------- текстовые разделы ---------- */
+.prose{max-width:74ch}
+.prose h2{font-size:23px;letter-spacing:-.015em;margin:30px 0 10px;font-weight:600}
+.prose h2:first-child{margin-top:4px}
+.prose h3{font-size:16.5px;margin:20px 0 6px;font-weight:600;color:#EDEFF6}
+.prose p,.prose li{color:#C9D0E2}
+.prose ul{padding-left:19px}
+.prose li{margin:4px 0}
+.lead{color:var(--dim);font-size:15.5px}
+.res{border:1px solid var(--rule);border-radius:9px;padding:13px 15px;margin:9px 0;background:var(--bg2)}
+.res b{font-size:15.5px}
+.res .k{font-family:var(--mono);font-size:11px;color:var(--accent);border:1px solid var(--rule2);border-radius:5px;padding:1px 6px;margin-left:7px;vertical-align:1px}
+.res p{margin:5px 0 0;font-size:14px;color:var(--dim)}
+.warn{border-left:2px solid var(--accent);background:var(--panel);padding:11px 14px;border-radius:0 8px 8px 0;margin:14px 0;font-size:14.5px;color:#D6DCEC}
+
+.boot{padding:9px 14px;font-family:var(--mono);font-size:12.5px;color:var(--faint);border-bottom:1px solid var(--rule);background:var(--bg2)}
+.boot.err{color:var(--err)}
+footer{max-width:1240px;margin:0 auto;padding:22px 18px 40px;color:var(--faint);font-size:13px;border-top:1px solid var(--rule);margin-top:26px}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">Полигон <span>аналитика</span></div>
+    <nav>
+      <button data-v="lab" aria-current="true">Тренажёр SQL</button>
+      <button data-v="stats">Статистика</button>
+      <button data-v="pandas">Python и pandas</button>
+      <button data-v="res">Куда ходить</button>
+    </nav>
+    <div class="counter">решено <b id="cnt">0</b> / <span id="tot">0</span></div>
+  </div>
+</header>
+
+<div class="boot" id="boot">Поднимаю базу в браузере…</div>
+
+<main>
+
+<!-- ================= ТРЕНАЖЁР ================= -->
+<section class="view on" id="v-lab">
+  <div class="lab">
+    <aside class="side" id="side"></aside>
+    <div class="work">
+      <div class="card">
+        <div class="task-h">
+          <h2 id="t-title">—</h2>
+          <span class="tag" id="t-tag"></span>
+        </div>
+        <p class="prompt" id="t-prompt"></p>
+        <div class="note" id="t-note"></div>
+      </div>
+
+      <div class="card">
+        <textarea id="editor" spellcheck="false" aria-label="SQL-запрос"></textarea>
+        <div class="row">
+          <button class="btn main" id="run">Выполнить и проверить</button>
+          <button class="btn" id="just">Только выполнить</button>
+          <button class="btn" id="reset">Очистить</button>
+        </div>
+        <div class="verdict" id="verdict"></div>
+        <div id="out"></div>
+        <details>
+          <summary>Показать эталонное решение</summary>
+          <pre id="sol"></pre>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 2px;font-size:15px;font-weight:600">Схема базы</h3>
+        <p style="margin:0;color:var(--dim);font-size:13.5px">Мини-маркетплейс: заказы, товары, продавцы, отзывы. Устроена так же, как Olist, только меньше.</p>
+        <div class="schema" id="schema"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= СТАТИСТИКА ================= -->
+<section class="view" id="v-stats">
+ <div class="prose">
+  <h2>Статистика для A/B — ровно то, что спрашивают</h2>
+  <p class="lead">Без вывода формул. Что считать, чем считать и почему именно этим — потому что на собеседовании спрашивают это, а не определения.</p>
+
+  <h3>Сначала выбери природу метрики</h3>
+  <p>Это первая развилка, и почти все ошибки растут отсюда. Метрика бывает двух видов, и от вида зависит весь дальнейший выбор.</p>
+  <ul>
+    <li><b>Доля (конверсия, retention, CTR).</b> У каждого пользователя 0 или 1. Среднее по такой колонке и есть доля вернувшихся.</li>
+    <li><b>Непрерывная (средний чек, время на сайте, число раундов).</b> У каждого пользователя число, и распределение почти всегда скошено вправо: много маленьких значений и длинный хвост больших.</li>
+  </ul>
+
+  <h3>Чем сравнивать доли</h3>
+  <p>Подходит z-тест для двух пропорций или хи-квадрат — на двух группах они дают практически одно и то же. В Python это <code>statsmodels.stats.proportion.proportions_ztest</code> или <code>scipy.stats.chi2_contingency</code>.</p>
+  <pre>from statsmodels.stats.proportion import proportions_ztest
+# successes — вернувшиеся, nobs — размеры групп
+stat, p = proportions_ztest([ret_a, ret_b], [n_a, n_b])</pre>
+  <p>T-тест на долях формально тоже работает при больших выборках, но это не то, что ждут услышать.</p>
+
+  <h3>Чем сравнивать средние</h3>
+  <p>Базово — тест Уэлча: <code>scipy.stats.ttest_ind(a, b, equal_var=False)</code>. Именно Уэлча, а не обычный t-тест: он не требует равных дисперсий в группах, а в реальных данных они почти никогда не равны. Если распределение сильно скошено и выборка небольшая — Манна-Уитни или бутстрап.</p>
+
+  <h3>Бутстрап</h3>
+  <p>Универсальный выход, когда непонятно, какой тест применим. Идея простая: много раз берёшь из своей выборки случайную выборку того же размера с возвращением и каждый раз считаешь метрику. Получается распределение метрики, по нему берёшь перцентили и получаешь доверительный интервал. Работает для любой метрики, включая медиану и 95-й перцентиль, для которых готовых формул нет.</p>
+  <pre>import numpy as np
+diffs = []
+for _ in range(10000):
+    a = np.random.choice(group_a, len(group_a), replace=True)
+    b = np.random.choice(group_b, len(group_b), replace=True)
+    diffs.append(b.mean() - a.mean())
+lo, hi = np.percentile(diffs, [2.5, 97.5])</pre>
+  <p>Если ноль не попал в интервал от <code>lo</code> до <code>hi</code> — разница значима. Это тот же вывод, что даёт p-value, только нагляднее.</p>
+
+  <h3>Что на самом деле значит p-value</h3>
+  <p>Это вероятность увидеть такую разницу или больше при условии, что на деле разницы нет. Не вероятность того, что гипотеза верна, и не вероятность ошибки. На собеседовании любят ловить именно на этой формулировке.</p>
+  <p>Порог 0.05 — соглашение, а не закон природы. Он означает: мы согласны в 5% случаев объявить эффект там, где его нет.</p>
+
+  <h3>Две ошибки и мощность</h3>
+  <ul>
+    <li><b>Ошибка I рода</b> — нашли эффект, которого нет. Её вероятность ты задаёшь сам, это и есть альфа.</li>
+    <li><b>Ошибка II рода</b> — эффект есть, но тест его не увидел. Её вероятность — бета.</li>
+    <li><b>Мощность</b> = 1 − бета, то есть шанс заметить эффект, если он реально есть. Стандарт — 80%.</li>
+  </ul>
+  <p>Отсюда растёт расчёт размера выборки: заранее фиксируешь альфу, мощность и минимальный эффект, который тебе интересен, и получаешь нужное число пользователей. Делать это надо <i>до</i> запуска.</p>
+
+  <h3>SRM — проверка, которую забывают</h3>
+  <p>Sample Ratio Mismatch: деление на группы должно совпадать с задуманным. Хи-квадрат на размеры групп, и если p-value ниже 0.001 — эксперимент сломан и считать метрики бессмысленно, сколько бы красивых цифр ни вышло.</p>
+  <pre>from scipy.stats import chisquare
+chisquare([45489, 44700])   # ожидание по умолчанию — поровну</pre>
+  <p>Порог тут жёстче обычных 5% намеренно: проверку гоняют на каждом эксперименте, и при 0.05 каждый двадцатый здоровый тест ложно объявлялся бы сломанным.</p>
+
+  <h3>Чем ломают результат</h3>
+  <ul>
+    <li><b>Подглядывание.</b> Смотреть p-value каждый день и остановиться, когда он провалился ниже 0.05 — гарантированный способ найти несуществующий эффект. Срок фиксируется заранее.</li>
+    <li><b>Выбросы.</b> Один игрок с 50 тысячами раундов способен сдвинуть среднее по группе. Среднее к ним чувствительно, доли — нет.</li>
+    <li><b>Множественные сравнения.</b> Проверил двадцать метрик — примерно одна покажет значимость случайно. Лечится поправкой Бонферрони или выбором одной главной метрики заранее.</li>
+    <li><b>Подмена метрики.</b> Выросли клики, но упала выручка. Поэтому кроме целевой метрики всегда смотрят контрольные.</li>
+  </ul>
+
+  <h3>Как звучит нормальный вывод</h3>
+  <p>Не «p-value 0.03, отвергаем нулевую гипотезу», а так: удержание на седьмой день упало с 19.0% до 18.2%, доверительный интервал разницы от −1.4 до −0.2 п.п., ноль в него не попадает. При текущем объёме аудитории это примерно столько-то пользователей в месяц. Вывод: не выкатывать.</p>
+  <div class="warn">Разница между джуном и стажёром, которого берут: второй заканчивает фразу на бизнес-решении, а не на p-value.</div>
+ </div>
+</section>
+
+<!-- ================= PANDAS ================= -->
+<section class="view" id="v-pandas">
+ <div class="prose">
+  <h2>Python и pandas: перевод с SQL</h2>
+  <p class="lead">Ты уже умеешь думать запросами. Значит pandas учить с нуля не нужно — нужна таблица соответствий и практика поверх неё.</p>
+
+  <h3>Словарь</h3>
+  <pre>SELECT a, b              df[['a','b']]
+WHERE x > 10             df[df.x > 10]
+WHERE x > 10 AND y = 'z' df[(df.x > 10) & (df.y == 'z')]
+ORDER BY x DESC          df.sort_values('x', ascending=False)
+LIMIT 5                  df.head(5)
+COUNT(*)                 len(df)
+COUNT(DISTINCT x)        df.x.nunique()
+GROUP BY a               df.groupby('a')
+GROUP BY a, COUNT(*)     df.groupby('a').size()
+GROUP BY a, AVG(x)       df.groupby('a').x.mean()
+HAVING cnt > 10          .loc[lambda s: s > 10]
+JOIN                     df.merge(other, on='id', how='inner')
+LEFT JOIN                df.merge(other, on='id', how='left')
+UNION ALL                pd.concat([df1, df2])
+CASE WHEN                np.where(cond, a, b)
+ROW_NUMBER() OVER(...)   df.groupby('g').cumcount() + 1
+SUM(x) OVER(ORDER BY d)  df.x.cumsum()
+LAG(x) OVER(ORDER BY d)  df.x.shift(1)</pre>
+
+  <h3>Связка, которая реально используется в работе</h3>
+  <p>SQL достаёт срез, pandas считает поверх него. Не одно вместо другого.</p>
+  <pre>import pandas as pd, duckdb
+
+con = duckdb.connect()
+df = con.execute("""
+    SELECT c.customer_id,
+           strftime(o.purchase_date, '%Y-%m') AS month,
+           SUM(i.price) AS revenue
+    FROM 'orders.csv' o
+    JOIN 'order_items.csv' i USING (order_id)
+    JOIN 'customers.csv' c USING (customer_id)
+    GROUP BY 1, 2
+""").df()          # .df() отдаёт готовый DataFrame
+
+df.groupby('month').revenue.sum().plot()</pre>
+  <p>duckdb читает csv напрямую, без загрузки в базу, и понимает оконные функции. Для локального анализа это сейчас стандартный инструмент.</p>
+
+  <h3>Что обязательно уметь руками</h3>
+  <ul>
+    <li><code>read_csv</code> с <code>parse_dates</code>, <code>dtype</code>, <code>sep</code></li>
+    <li><code>info</code>, <code>describe</code>, <code>isna().sum()</code>, <code>duplicated().sum()</code> — разведка перед любым анализом</li>
+    <li><code>groupby().agg({'x':'sum','y':'mean'})</code> — несколько агрегатов сразу</li>
+    <li><code>merge</code> с проверкой <code>validate='one_to_many'</code> — ловит размножение строк на джойне</li>
+    <li><code>pivot_table</code> — когортная таблица строится именно им</li>
+    <li><code>pd.cut</code>, <code>qcut</code> — разбиение на корзины для сегментов</li>
+    <li><code>resample('M')</code> — агрегация по времени</li>
+  </ul>
+
+  <h3>Задачи на Olist — по возрастанию</h3>
+  <p>Делаются в Jupyter поверх тех же данных. Каждую сначала напиши в SQL, потом повтори в pandas и сверь цифры: если сошлись, обе версии ты понял.</p>
+  <ul>
+    <li>Выручка и число заказов по месяцам, график</li>
+    <li>Доля заказов, доставленных позже обещанного срока, по месяцам</li>
+    <li>Средняя оценка отзыва в зависимости от задержки доставки — есть ли связь</li>
+    <li>Топ-10 категорий по выручке и их доля в общей — ABC-анализ</li>
+    <li>Доля клиентов, сделавших больше одного заказа</li>
+    <li>Когортная таблица: месяц первой покупки против месяца активности</li>
+    <li>Продавцы с худшими сроками: сколько они стоят площадке в отменах</li>
+    <li>Распределение среднего чека — гистограмма, медиана против среднего, объясни разницу</li>
+  </ul>
+  <div class="warn">Последний пункт — любимый вопрос на собеседовании. Если среднее сильно больше медианы, у распределения правый хвост, и среднее как метрика врёт.</div>
+ </div>
+</section>
+
+<!-- ================= РЕСУРСЫ ================= -->
+<section class="view" id="v-res">
+ <div class="prose">
+  <h2>Куда ходить за практикой</h2>
+  <p class="lead">Отобрано по одному признаку: есть задачи с проверкой. Теория без задач в список не попала — её у тебя и так хватает.</p>
+
+  <h3>Твои ноутбуки с автопроверкой</h3>
+  <div class="res"><b>python_practice.ipynb</b><span class="k">45 задач</span>
+    <p>Поэтапный курс pandas: чтение таблицы, фильтры, новые колонки, группировки, соединения, время, сводные и когорты, метрики маркетплейса. Каждая задача заканчивается assert — проверка встроена. Данные генерируются внутри, качать ничего не нужно.</p></div>
+  <div class="res"><b>stats_practice.ipynb</b><span class="k">25 задач</span>
+    <p>Статистика и A/B: описательные статистики, стандартная ошибка на симуляции, доверительные интервалы и бутстрап, тесты на средних и долях, SRM, мощность и размер выборки, подглядывание и множественные сравнения. Последний блок — разбор Cookie Cats целиком, без проверки: там ты сам.</p></div>
+
+  <h3>SQL</h3>
+  <div class="res"><b>Симулятор SQL от Karpov Courses</b><span class="k">бесплатно</span>
+    <p>150 заданий на настоящем PostgreSQL — от простых запросов до оконных функций и продуктовых метрик, на данных сервиса доставки. Самое близкое к тому, что делает аналитик на работе. Начинать стоит отсюда.</p></div>
+  <div class="res"><b>sql-ex.ru</b><span class="k">бесплатно</span>
+    <p>Больше 500 задач, старая школа, местами олимпиадные формулировки. Полезен как объём: после сотни задач синтаксис перестаёт быть проблемой.</p></div>
+  <div class="res"><b>SQL Academy</b><span class="k">частично платно</span>
+    <p>Интерактивный тренажёр с готовыми датасетами и разбивкой по уровням, примеры из e-commerce. Часть задач — уровня собеседований в крупных компаниях.</p></div>
+  <div class="res"><b>SQL Murder Mystery</b><span class="k">бесплатно</span>
+    <p>Детектив, который раскрывается запросами. Звучит как игрушка, но тренирует ровно тот навык, которого не дают задачники: читать незнакомую схему и строить цепочку запросов к ответу.</p></div>
+  <div class="res"><b>LeetCode / StrataScratch / DataLemur</b><span class="k">смешанно</span>
+    <p>Для последнего месяца перед собеседованиями. В DataLemur к каждой задаче идёт пошаговый разбор, а не просто ответ.</p></div>
+
+  <h3>Статистика и A/B</h3>
+  <div class="res"><b>Курсы Яндекса, которые ты уже проходишь</b>
+    <p>Не бросай, но переведи в справочный режим: упёрся в термин — открыл нужный кусок. Проходить подряд, когда есть данные под рукой, смысла больше нет.</p></div>
+  <div class="res"><b>Stepik, «Основы статистики» Карпова</b><span class="k">бесплатно</span>
+    <p>Классика на русском с задачами. Первая часть закрывает всё, что спрашивают на стажёрских собеседованиях.</p></div>
+  <div class="res"><b>Evan Miller, Awesome A/B Tools</b><span class="k">бесплатно</span>
+    <p>Калькуляторы размера выборки и значимости. Полезны не как калькуляторы, а чтобы увидеть, как меняется нужный размер выборки при изменении минимального эффекта.</p></div>
+
+  <h3>Данные для проектов</h3>
+  <div class="res"><b>Olist — бразильский маркетплейс</b>
+    <p>Твой основной проект. Девять связанных таблиц, домен совпадает с Ozon, WB и Авито. Разборов на Kaggle тысячи и все одинаковые — бери бизнес-вопрос, а не «EDA датасета».</p></div>
+  <div class="res"><b>Cookie Cats</b>
+    <p>Маленький, с экспериментом и проверяемым ответом. Закрывает A/B, которого в Olist нет.</p></div>
+
+  <h3>Порядок, если коротко</h3>
+  <ul>
+    <li>Этот тренажёр до оконных функций включительно — чтобы SQL перестал быть узким местом</li>
+    <li>Cookie Cats до вывода — первый законченный разбор</li>
+    <li>Симулятор Karpov — объём и продуктовые метрики</li>
+    <li>Olist с бизнес-вопросом — проект в портфолио</li>
+    <li>LeetCode/DataLemur — за месяц до подачи</li>
+  </ul>
+  <div class="warn">Наборы на стажировки идут волнами: у Авито февраль-апрель и август-октябрь, у остальных примерно так же. Это и есть твой дедлайн, а не «когда буду готов».</div>
+ </div>
+</section>
+
+</main>
+
+<footer>Сделано для подготовки к стажировке. База живёт прямо в браузере, ничего никуда не отправляется, прогресс хранится локально.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-asm.js"></script>
+<script>
+/* ============ генератор данных ============ */
+let seed = 20261001;
+function rnd(){ seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+function ri(a,b){ return a + Math.floor(rnd()*(b-a+1)); }
+function pick(a){ return a[ri(0,a.length-1)]; }
+function dstr(d){ return d.toISOString().slice(0,10); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
+const CITIES=['sao paulo','rio de janeiro','belo horizonte','curitiba','porto alegre','salvador','recife','fortaleza','brasilia','campinas'];
+const STATES=['SP','RJ','MG','PR','RS','BA','PE','CE','DF','SP'];
+const CATS=['electronics','furniture','toys','beauty','sports','books','garden','kitchen'];
+const STATUS=['delivered','delivered','delivered','delivered','delivered','delivered','shipped','processing','canceled'];
+
+function buildSQL(){
+  const q=[];
+  q.push(`CREATE TABLE customers(customer_id INTEGER PRIMARY KEY, city TEXT, state TEXT, signup_date TEXT);`);
+  q.push(`CREATE TABLE sellers(seller_id INTEGER PRIMARY KEY, city TEXT, state TEXT);`);
+  q.push(`CREATE TABLE products(product_id INTEGER PRIMARY KEY, category TEXT, price REAL, weight_g INTEGER);`);
+  q.push(`CREATE TABLE orders(order_id INTEGER PRIMARY KEY, customer_id INTEGER, status TEXT, purchase_date TEXT, delivered_date TEXT, estimated_date TEXT);`);
+  q.push(`CREATE TABLE order_items(order_id INTEGER, item_id INTEGER, product_id INTEGER, seller_id INTEGER, price REAL, freight REAL);`);
+  q.push(`CREATE TABLE reviews(review_id INTEGER PRIMARY KEY, order_id INTEGER, score INTEGER, created_date TEXT);`);
+
+  const start=new Date('2024-01-05');
+  const cv=[];
+  for(let i=1;i<=140;i++){ const k=ri(0,9); cv.push(`(${i},'${CITIES[k]}','${STATES[k]}','${dstr(addDays(start,ri(0,200)))}')`); }
+  q.push(`INSERT INTO customers VALUES ${cv.join(',')};`);
+
+  const sv=[];
+  for(let i=1;i<=28;i++){ const k=ri(0,9); sv.push(`(${i},'${CITIES[k]}','${STATES[k]}')`); }
+  q.push(`INSERT INTO sellers VALUES ${sv.join(',')};`);
+
+  const pv=[];
+  for(let i=1;i<=70;i++){
+    const c=pick(CATS);
+    const base = c==='electronics'?ri(180,1900) : c==='furniture'?ri(150,1200) : ri(20,420);
+    pv.push(`(${i},'${c}',${base}.0,${ri(80,9000)})`);
+  }
+  q.push(`INSERT INTO products VALUES ${pv.join(',')};`);
+
+  const ov=[], iv=[], rv=[];
+  let itemRow=0, revId=0;
+  for(let o=1;o<=520;o++){
+    const cust=ri(1,140);
+    const pd=addDays(start, ri(0, 420));
+    const st=pick(STATUS);
+    const est=addDays(pd, ri(8,22));
+    let del='NULL';
+    if(st==='delivered'){
+      const late = rnd()<0.22 ? ri(1,14) : -ri(0,9);
+      del = `'${dstr(addDays(est, late))}'`;
+    }
+    ov.push(`(${o},${cust},'${st}','${dstr(pd)}',${del},'${dstr(est)}')`);
+
+    const n=rnd()<0.72?1:ri(2,3);
+    for(let k=1;k<=n;k++){
+      itemRow++;
+      const prod=ri(1,70);
+      iv.push(`(${o},${k},${prod},${ri(1,28)},(SELECT price FROM products WHERE product_id=${prod}),${ri(8,45)}.0)`);
+    }
+    if(st==='delivered' && rnd()<0.82){
+      revId++;
+      let sc;
+      if(del!=='NULL' && new Date(del.slice(1,11))>est) sc = rnd()<0.6?ri(1,2):ri(3,4);
+      else sc = rnd()<0.72?5:ri(3,4);
+      rv.push(`(${revId},${o},${sc},'${dstr(addDays(pd,ri(10,30)))}')`);
+    }
+  }
+  q.push(`INSERT INTO orders VALUES ${ov.join(',')};`);
+  q.push(`INSERT INTO order_items VALUES ${iv.join(',')};`);
+  q.push(`INSERT INTO reviews VALUES ${rv.join(',')};`);
+  return q.join('\n');
+}
+
+/* ============ задачи ============ */
+const TASKS=[
+{g:'Выборка и фильтры',t:'Дорогая электроника',tag:'SELECT · WHERE',
+ p:'Выведи id, категорию и цену всех товаров категории electronics дороже 500, от дорогих к дешёвым.',
+ n:'Порядок частей запроса всегда один: SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT. Выполняется он, кстати, не в этом порядке: сначала FROM, потом WHERE, и только в конце SELECT. Поэтому на псевдоним из SELECT нельзя сослаться в WHERE.',
+ s:`SELECT product_id, category, price
+FROM products
+WHERE category = 'electronics' AND price > 500
+ORDER BY price DESC;`},
+
+{g:'Выборка и фильтры',t:'Заказы за лето',tag:'даты',
+ p:'Сколько заказов сделано в июне, июле и августе 2024 года? Одно число в колонке cnt.',
+ n:'Даты здесь лежат текстом в формате YYYY-MM-DD, и это удобно: такие строки сравниваются как даты и сортируются правильно. BETWEEN работает включительно с обеих сторон.',
+ s:`SELECT COUNT(*) AS cnt
+FROM orders
+WHERE purchase_date BETWEEN '2024-06-01' AND '2024-08-31';`},
+
+{g:'Выборка и фильтры',t:'Непонятные статусы',tag:'DISTINCT',
+ p:'Какие вообще бывают статусы у заказов? Выведи уникальные значения по алфавиту.',
+ n:'Первое, что делают с незнакомой таблицей: смотрят, какие значения реально встречаются в категориальных колонках. Иначе легко написать WHERE status = "delivered " с лишним пробелом и получить ноль строк.',
+ s:`SELECT DISTINCT status FROM orders ORDER BY status;`},
+
+{g:'Агрегация',t:'Заказы по статусам',tag:'GROUP BY',
+ p:'Сколько заказов в каждом статусе? Колонки status и cnt, от большего к меньшему.',
+ n:'GROUP BY схлопывает строки в группы, агрегатная функция считает по каждой. Правило: всё, что в SELECT не завёрнуто в агрегат, обязано быть в GROUP BY.',
+ s:`SELECT status, COUNT(*) AS cnt
+FROM orders
+GROUP BY status
+ORDER BY cnt DESC;`},
+
+{g:'Агрегация',t:'Города с заметной базой',tag:'HAVING',
+ p:'Города, где больше 12 клиентов. Колонки city и cnt, по убыванию числа клиентов.',
+ n:'Разница, которую спрашивают на каждом собеседовании: WHERE фильтрует строки до группировки, HAVING — готовые группы после. Поэтому в HAVING можно писать COUNT(*), а в WHERE нельзя.',
+ s:`SELECT city, COUNT(*) AS cnt
+FROM customers
+GROUP BY city
+HAVING COUNT(*) > 12
+ORDER BY cnt DESC;`},
+
+{g:'Агрегация',t:'Выручка по месяцам',tag:'строки и даты',
+ p:'Выручка по месяцам: колонки month в формате YYYY-MM и revenue как сумма price из order_items. По возрастанию месяца.',
+ n:'strftime режет дату до нужной части. Это каркас почти любого продуктового отчёта — дальше поверх него строят графики и считают прирост.',
+ s:`SELECT strftime('%Y-%m', o.purchase_date) AS month,
+       SUM(i.price) AS revenue
+FROM orders o
+JOIN order_items i ON i.order_id = o.order_id
+GROUP BY month
+ORDER BY month;`},
+
+{g:'Соединения',t:'Выручка по категориям',tag:'JOIN',
+ p:'Топ-5 категорий по выручке. Колонки category и revenue.',
+ n:'Выручка лежит в order_items, а категория — в products. Соединяем по product_id. Если соединить не по тому ключу, строки размножатся, и сумма станет больше настоящей — это самая частая ошибка в реальных отчётах.',
+ s:`SELECT p.category, SUM(i.price) AS revenue
+FROM order_items i
+JOIN products p ON p.product_id = i.product_id
+GROUP BY p.category
+ORDER BY revenue DESC
+LIMIT 5;`},
+
+{g:'Соединения',t:'Товары, которые никто не купил',tag:'LEFT JOIN',
+ p:'Найди товары, которых нет ни в одном заказе. Выведи product_id и category по возрастанию id.',
+ n:'Приём называется anti-join: соединяем влево и оставляем строки, где справа ничего не нашлось. Через NOT IN тоже можно, но NOT IN ломается, если в подзапросе встретится NULL — поэтому в проде пишут так.',
+ s:`SELECT p.product_id, p.category
+FROM products p
+LEFT JOIN order_items i ON i.product_id = p.product_id
+WHERE i.product_id IS NULL
+ORDER BY p.product_id;`},
+
+{g:'Соединения',t:'Оценка против задержки',tag:'JOIN · CASE',
+ p:'Сравни средний балл отзыва у заказов, доставленных вовремя и с опозданием. Колонки delivery (значения on_time и late) и avg_score. Только доставленные заказы.',
+ n:'CASE WHEN — это if внутри SQL. Здесь он создаёт сегмент на лету, и это ровно тот тип вопроса, который решает бизнес-задачу: видно, сколько стоит просрочка в оценках.',
+ s:`SELECT CASE WHEN o.delivered_date > o.estimated_date THEN 'late' ELSE 'on_time' END AS delivery,
+       AVG(r.score) AS avg_score
+FROM orders o
+JOIN reviews r ON r.order_id = o.order_id
+WHERE o.status = 'delivered'
+GROUP BY delivery;`},
+
+{g:'Подзапросы и CTE',t:'Клиенты активнее среднего',tag:'подзапрос',
+ p:'Клиенты, у которых заказов больше, чем в среднем на клиента. Колонки customer_id и cnt, по убыванию cnt.',
+ n:'Подзапрос в HAVING считается один раз и подставляется как число. Такие запросы читаются тяжело — ниже увидишь, как то же самое выглядит через CTE, и почему его предпочитают.',
+ s:`SELECT customer_id, COUNT(*) AS cnt
+FROM orders
+GROUP BY customer_id
+HAVING COUNT(*) > (SELECT COUNT(*) * 1.0 / COUNT(DISTINCT customer_id) FROM orders)
+ORDER BY cnt DESC;`},
+
+{g:'Подзапросы и CTE',t:'Доля просрочек по месяцам',tag:'CTE',
+ p:'По каждому месяцу покупки посчитай долю доставленных заказов, пришедших позже обещанной даты. Колонки month, late_share (от 0 до 1). Только доставленные.',
+ n:'WITH выносит промежуточный шаг наверх и даёт ему имя. Запрос начинает читаться сверху вниз как рассуждение, а не выворачиваться наизнанку. На ревью за CTE вместо вложенных подзапросов говорят спасибо.',
+ s:`WITH d AS (
+  SELECT strftime('%Y-%m', purchase_date) AS month,
+         CASE WHEN delivered_date > estimated_date THEN 1 ELSE 0 END AS is_late
+  FROM orders
+  WHERE status = 'delivered'
+)
+SELECT month, AVG(is_late) AS late_share
+FROM d
+GROUP BY month
+ORDER BY month;`},
+
+{g:'Подзапросы и CTE',t:'Средний чек заказа',tag:'CTE · вложенная агрегация',
+ p:'Посчитай средний чек: сначала сумма по каждому заказу, потом среднее по заказам. Одна колонка avg_check.',
+ n:'Ловушка на собеседовании: AVG(price) по order_items даст среднюю цену товара, а не средний чек. Агрегация в два этажа — сначала схлопнуть до заказа, потом усреднить.',
+ s:`WITH o AS (
+  SELECT order_id, SUM(price) AS total
+  FROM order_items
+  GROUP BY order_id
+)
+SELECT AVG(total) AS avg_check FROM o;`},
+
+{g:'Оконные функции',t:'Топ-3 товара внутри категории',tag:'ROW_NUMBER',
+ p:'В каждой категории найди 3 товара с наибольшей выручкой. Колонки category, product_id, revenue, rn — по категории и возрастанию rn.',
+ n:'Вот она, та самая функция, которой ты не видел. Окно не схлопывает строки, а считает рядом с каждой. PARTITION BY — это «группировать», ORDER BY внутри OVER — по чему нумеровать. Задача «топ-N внутри группы» решается только так, и её дают почти всегда.',
+ s:`WITH r AS (
+  SELECT p.category, i.product_id, SUM(i.price) AS revenue
+  FROM order_items i JOIN products p ON p.product_id = i.product_id
+  GROUP BY p.category, i.product_id
+),
+n AS (
+  SELECT category, product_id, revenue,
+         ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC) AS rn
+  FROM r
+)
+SELECT category, product_id, revenue, rn
+FROM n WHERE rn <= 3
+ORDER BY category, rn;`},
+
+{g:'Оконные функции',t:'Накопленная выручка',tag:'SUM OVER',
+ p:'По месяцам выведи выручку и нарастающий итог. Колонки month, revenue, running_total.',
+ n:'Тот же SUM, но с OVER превращается в кумулятивную сумму: для каждой строки складывает всё от начала до неё. По умолчанию окно идёт от первой строки до текущей, поэтому задавать рамку вручную тут не нужно.',
+ s:`WITH m AS (
+  SELECT strftime('%Y-%m', o.purchase_date) AS month, SUM(i.price) AS revenue
+  FROM orders o JOIN order_items i ON i.order_id = o.order_id
+  GROUP BY month
+)
+SELECT month, revenue,
+       SUM(revenue) OVER (ORDER BY month) AS running_total
+FROM m
+ORDER BY month;`},
+
+{g:'Оконные функции',t:'Прирост месяц к месяцу',tag:'LAG',
+ p:'К выручке по месяцам добавь выручку прошлого месяца и прирост в процентах. Колонки month, revenue, prev, growth_pct.',
+ n:'LAG заглядывает на строку назад, LEAD — вперёд. Прирост месяц к месяцу спрашивают постоянно, потому что без окон его пришлось бы считать самосоединением таблицы с самой собой.',
+ s:`WITH m AS (
+  SELECT strftime('%Y-%m', o.purchase_date) AS month, SUM(i.price) AS revenue
+  FROM orders o JOIN order_items i ON i.order_id = o.order_id
+  GROUP BY month
+)
+SELECT month, revenue,
+       LAG(revenue) OVER (ORDER BY month) AS prev,
+       (revenue - LAG(revenue) OVER (ORDER BY month)) * 100.0
+         / LAG(revenue) OVER (ORDER BY month) AS growth_pct
+FROM m
+ORDER BY month;`},
+
+{g:'Оконные функции',t:'Первый заказ клиента',tag:'PARTITION BY',
+ p:'Для каждого клиента найди дату его первого заказа. Колонки customer_id и first_order, по возрастанию customer_id.',
+ n:'Тут окно не обязательно, хватило бы MIN с GROUP BY — и это правильный ответ. Но полезно уметь сделать то же через окно: когда рядом нужны и первая дата, и детали конкретного заказа, GROUP BY уже не спасает.',
+ s:`SELECT customer_id, MIN(purchase_date) AS first_order
+FROM orders
+GROUP BY customer_id
+ORDER BY customer_id;`},
+
+{g:'Оконные функции',t:'Доля категории в выручке',tag:'оконный SUM без ORDER BY',
+ p:'По каждой категории выведи выручку и её долю в общей выручке. Колонки category, revenue, share — по убыванию выручки.',
+ n:'SUM OVER () без ORDER BY и без PARTITION BY считает по всей таблице и приклеивает одно и то же число к каждой строке. Так считают доли, не делая второй проход по данным.',
+ s:`WITH r AS (
+  SELECT p.category, SUM(i.price) AS revenue
+  FROM order_items i JOIN products p ON p.product_id = i.product_id
+  GROUP BY p.category
+)
+SELECT category, revenue, revenue * 1.0 / SUM(revenue) OVER () AS share
+FROM r
+ORDER BY revenue DESC;`},
+
+{g:'Продуктовые метрики',t:'Конверсия в доставку',tag:'метрика',
+ p:'Какая доля всех заказов доходит до статуса delivered? Одна колонка conversion.',
+ n:'Шаблон любой конверсии: сумма подходящих, делённая на общее число. AVG от CASE даёт ровно то же и пишется короче — этот приём стоит запомнить.',
+ s:`SELECT AVG(CASE WHEN status = 'delivered' THEN 1.0 ELSE 0 END) AS conversion
+FROM orders;`},
+
+{g:'Продуктовые метрики',t:'Повторные покупки',tag:'retention',
+ p:'Какая доля клиентов сделала больше одного заказа? Одна колонка repeat_share.',
+ n:'Базовая метрика здоровья маркетплейса. На собеседовании следом спросят, почему считать её по всей истории неправильно — потому что у недавних клиентов просто не было времени вернуться. Правильно считать по когортам, как в следующей задаче.',
+ s:`WITH c AS (
+  SELECT customer_id, COUNT(*) AS n FROM orders GROUP BY customer_id
+)
+SELECT AVG(CASE WHEN n > 1 THEN 1.0 ELSE 0 END) AS repeat_share FROM c;`},
+
+{g:'Продуктовые метрики',t:'Когорты',tag:'когортный анализ',
+ p:'Для каждой когорты (месяц первого заказа) посчитай размер когорты и сколько из них вернулись в следующие месяцы. Колонки cohort, cohort_size, returned.',
+ n:'Когортный анализ — то, что отличает аналитика от человека с Excel. Логика: закрепляем за клиентом месяц прихода, дальше смотрим его активность относительно этого месяца. Это каркас для retention-кривой и LTV.',
+ s:`WITH f AS (
+  SELECT customer_id, MIN(purchase_date) AS first_dt FROM orders GROUP BY customer_id
+),
+c AS (
+  SELECT f.customer_id, strftime('%Y-%m', f.first_dt) AS cohort,
+         MAX(CASE WHEN o.purchase_date > f.first_dt THEN 1 ELSE 0 END) AS came_back
+  FROM f JOIN orders o ON o.customer_id = f.customer_id
+  GROUP BY f.customer_id, cohort
+)
+SELECT cohort, COUNT(*) AS cohort_size, SUM(came_back) AS returned
+FROM c GROUP BY cohort ORDER BY cohort;`},
+
+{g:'Продуктовые метрики',t:'Проблемные продавцы',tag:'бизнес-вопрос',
+ p:'Продавцы с минимум 10 доставленными заказами, у которых доля просрочек выше 30%. Колонки seller_id, orders_cnt, late_share — по убыванию late_share.',
+ n:'Задача целиком в духе реального тестового: несколько условий, порог на объём, чтобы не ловить шум на двух заказах. Фильтр по минимальному размеру группы — признак того, что человек понимает, зачем он считает.',
+ s:`WITH s AS (
+  SELECT i.seller_id, o.order_id,
+         CASE WHEN o.delivered_date > o.estimated_date THEN 1 ELSE 0 END AS is_late
+  FROM orders o JOIN order_items i ON i.order_id = o.order_id
+  WHERE o.status = 'delivered'
+  GROUP BY i.seller_id, o.order_id
+)
+SELECT seller_id, COUNT(*) AS orders_cnt, AVG(is_late) AS late_share
+FROM s
+GROUP BY seller_id
+HAVING COUNT(*) >= 10 AND AVG(is_late) > 0.3
+ORDER BY late_share DESC;`},
+
+{g:'Продуктовые метрики',t:'ABC-анализ категорий',tag:'окна · бизнес',
+ p:'Отсортируй категории по выручке и покажи накопленную долю. Колонки category, revenue, cum_share.',
+ n:'Классический ABC: обычно небольшая часть категорий даёт основную долю выручки. Объединяет оконную сумму с накопительным итогом — и ровно так это считают в рознице.',
+ s:`WITH r AS (
+  SELECT p.category, SUM(i.price) AS revenue
+  FROM order_items i JOIN products p ON p.product_id = i.product_id
+  GROUP BY p.category
+)
+SELECT category, revenue,
+       SUM(revenue) OVER (ORDER BY revenue DESC) * 1.0 / SUM(revenue) OVER () AS cum_share
+FROM r
+ORDER BY revenue DESC;`},
+
+{g:'Выборка и фильтры',t:'Тяжёлое и дешёвое',tag:'несколько условий',
+ p:'Товары тяжелее 5000 грамм и дешевле 2000. Колонки product_id, price, weight_g, по возрастанию product_id.',
+ n:'Доставка тяжёлых дешёвых товаров часто убыточна — это реальный запрос, который делают в логистике маркетплейса.',
+ s:`SELECT product_id, price, weight_g
+FROM products
+WHERE weight_g > 5000 AND price < 2000
+ORDER BY product_id;`},
+
+{g:'Выборка и фильтры',t:'Поиск по части строки',tag:'LIKE',
+ p:'Клиенты из городов, название которых начинается на букву s. Колонки customer_id и city, по возрастанию id.',
+ n:'Процент в LIKE означает «любое продолжение», подчёркивание — ровно один символ. Поиск по началу строки умеет пользоваться индексом, поиск вида %текст% — почти никогда, и на больших таблицах это заметно.',
+ s:`SELECT customer_id, city
+FROM customers
+WHERE city LIKE 's%'
+ORDER BY customer_id;`},
+
+{g:'Выборка и фильтры',t:'Пустые значения',tag:'IS NULL',
+ p:'Заказы, у которых не проставлена дата доставки. Колонки order_id и status, по возрастанию order_id.',
+ n:'NULL — это не ноль и не пустая строка, а «значение неизвестно». Поэтому сравнение `= NULL` всегда даёт неопределённость, и работает только IS NULL. На собеседованиях это спрашивают постоянно.',
+ s:`SELECT order_id, status
+FROM orders
+WHERE delivered_date IS NULL
+ORDER BY order_id;`},
+
+{g:'Выборка и фильтры',t:'Заглушка вместо пустоты',tag:'COALESCE',
+ p:'Выведи order_id и дату доставки, подставив текст not_delivered там, где её нет. Колонки order_id и delivered. Только первые 20 заказов по возрастанию id.',
+ n:'COALESCE возвращает первое непустое значение из списка. Нужен почти в каждом отчёте: пустая ячейка в выгрузке для бизнеса выглядит как ошибка, а явная заглушка — как ответ.',
+ s:`SELECT order_id, COALESCE(delivered_date, 'not_delivered') AS delivered
+FROM orders
+ORDER BY order_id
+LIMIT 20;`},
+
+{g:'Агрегация',t:'Уникальные покупатели',tag:'COUNT DISTINCT',
+ p:'Сколько разных клиентов сделали хотя бы один заказ? Одна колонка n_customers.',
+ n:'COUNT(*) считает строки, COUNT(DISTINCT x) — разные значения. Путаница между ними даёт завышенную аудиторию в отчёте, и это одна из самых частых ошибок в продуктовой аналитике.',
+ s:`SELECT COUNT(DISTINCT customer_id) AS n_customers FROM orders;`},
+
+{g:'Агрегация',t:'Разброс цен по категориям',tag:'MIN · MAX · ROUND',
+ p:'По каждой категории выведи минимальную, максимальную и среднюю цену, округлённую до двух знаков. Колонки category, min_price, max_price, avg_price. По алфавиту.',
+ n:'ROUND во втором аргументе принимает число знаков. Без округления средние тянут за собой пятнадцать цифр после запятой, и таблицу невозможно читать.',
+ s:`SELECT category,
+       MIN(price) AS min_price,
+       MAX(price) AS max_price,
+       ROUND(AVG(price), 2) AS avg_price
+FROM products
+GROUP BY category
+ORDER BY category;`},
+
+{g:'Агрегация',t:'Самые активные клиенты',tag:'GROUP BY · LIMIT',
+ p:'Топ-10 клиентов по числу заказов. Колонки customer_id и orders_cnt.',
+ n:'Обрати внимание на хвост: если у многих клиентов одинаковое число заказов, LIMIT отрежет произвольных из них. Когда это важно, добавляют второй ключ сортировки для предсказуемости.',
+ s:`SELECT customer_id, COUNT(*) AS orders_cnt
+FROM orders
+GROUP BY customer_id
+ORDER BY orders_cnt DESC, customer_id
+LIMIT 10;`},
+
+{g:'Агрегация',t:'Заказы без отзыва',tag:'LEFT JOIN · COUNT',
+ p:'Сколько доставленных заказов остались без отзыва? Одна колонка no_review.',
+ n:'Классическая связка: соединяем влево и считаем строки, где справа пусто. Через NOT IN тоже получится, но NOT IN ломается о NULL в подзапросе, поэтому в рабочем коде пишут так.',
+ s:`SELECT COUNT(*) AS no_review
+FROM orders o
+LEFT JOIN reviews r ON r.order_id = o.order_id
+WHERE o.status = 'delivered' AND r.review_id IS NULL;`},
+
+{g:'Соединения',t:'Местные продавцы',tag:'JOIN по трём таблицам',
+ p:'Сколько позиций заказов продано продавцом из того же города, где живёт клиент? Одна колонка local_items.',
+ n:'Соединение по цепочке плюс условие на совпадение двух колонок из разных таблиц. Для маркетплейса это реальный вопрос: локальная доставка дешевле и быстрее.',
+ s:`SELECT COUNT(*) AS local_items
+FROM order_items i
+JOIN orders o ON o.order_id = i.order_id
+JOIN customers c ON c.customer_id = o.customer_id
+JOIN sellers s ON s.seller_id = i.seller_id
+WHERE c.city = s.city;`},
+
+{g:'Соединения',t:'Все города разом',tag:'UNION',
+ p:'Собери общий список городов, где есть клиенты или продавцы, без повторов, по алфавиту. Одна колонка city.',
+ n:'UNION склеивает результаты друг под другом и убирает дубли, UNION ALL оставляет всё как есть. ALL работает быстрее, потому что не тратит время на поиск повторов — если дубли не мешают, берут его.',
+ s:`SELECT city FROM customers
+UNION
+SELECT city FROM sellers
+ORDER BY city;`},
+
+{g:'Соединения',t:'Рейтинг продавцов по отзывам',tag:'JOIN · AVG',
+ p:'Средняя оценка по продавцам, у которых минимум 5 отзывов. Колонки seller_id, n_reviews, avg_score — по убыванию avg_score.',
+ n:'Порог на число отзывов обязателен: продавец с одной пятёркой иначе окажется лучшим в маркетплейсе. Фильтр на минимальный размер группы — признак того, что человек понимает, что считает.',
+ s:`SELECT i.seller_id,
+       COUNT(DISTINCT r.review_id) AS n_reviews,
+       ROUND(AVG(r.score), 2) AS avg_score
+FROM order_items i
+JOIN reviews r ON r.order_id = i.order_id
+GROUP BY i.seller_id
+HAVING COUNT(DISTINCT r.review_id) >= 5
+ORDER BY avg_score DESC;`},
+
+{g:'Оконные функции',t:'Три вида ранга',tag:'RANK · DENSE_RANK',
+ p:'Для товаров категории electronics выведи product_id, price и три колонки: rn (ROW_NUMBER), rnk (RANK), dns (DENSE_RANK) по убыванию цены. Сортируй по rn.',
+ n:'Разница проявляется на одинаковых ценах. ROW_NUMBER нумерует подряд, даже если значения равны. RANK даёт равным один ранг, а потом пропускает номера. DENSE_RANK даёт равным один ранг и не пропускает. Этот вопрос задают почти на каждом собеседовании.',
+ s:`SELECT product_id, price,
+       ROW_NUMBER() OVER (ORDER BY price DESC) AS rn,
+       RANK()       OVER (ORDER BY price DESC) AS rnk,
+       DENSE_RANK() OVER (ORDER BY price DESC) AS dns
+FROM products
+WHERE category = 'electronics'
+ORDER BY rn;`},
+
+{g:'Оконные функции',t:'Разбиение на квартили',tag:'NTILE',
+ p:'Раздели товары на 4 группы по цене и посчитай границы каждой. Колонки q, min_price, max_price, n — по возрастанию q.',
+ n:'NTILE режет отсортированный набор на равные по количеству части. Так строят сегменты: дешёвый, средний, дорогой, премиум. В RFM-анализе клиентов делят ровно этим.',
+ s:`WITH q AS (
+  SELECT price, NTILE(4) OVER (ORDER BY price) AS q FROM products
+)
+SELECT q, MIN(price) AS min_price, MAX(price) AS max_price, COUNT(*) AS n
+FROM q GROUP BY q ORDER BY q;`},
+
+{g:'Оконные функции',t:'Скользящее среднее',tag:'рамка окна',
+ p:'К выручке по месяцам добавь скользящее среднее по текущему и двум предыдущим месяцам. Колонки month, revenue, ma3.',
+ n:'Вот где пригождается рамка: ROWS BETWEEN 2 PRECEDING AND CURRENT ROW означает «текущая строка и две до неё». Без рамки окно по умолчанию берёт всё от начала, и получится накопительное среднее, а не скользящее. Сглаживание нужно, чтобы отделить тренд от месячного шума.',
+ s:`WITH m AS (
+  SELECT strftime('%Y-%m', o.purchase_date) AS month, SUM(i.price) AS revenue
+  FROM orders o JOIN order_items i ON i.order_id = o.order_id
+  GROUP BY month
+)
+SELECT month, revenue,
+       AVG(revenue) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS ma3
+FROM m ORDER BY month;`},
+
+{g:'Оконные функции',t:'Доля месяца внутри года',tag:'PARTITION BY',
+ p:'По каждому месяцу выведи выручку и её долю в выручке соответствующего года. Колонки month, revenue, share_in_year — по возрастанию месяца.',
+ n:'PARTITION BY разбивает окно на независимые куски: сумма считается внутри своего года, а не по всей таблице. Так считают сезонность и вклад периода в итог.',
+ s:`WITH m AS (
+  SELECT strftime('%Y-%m', o.purchase_date) AS month,
+         strftime('%Y', o.purchase_date) AS yr,
+         SUM(i.price) AS revenue
+  FROM orders o JOIN order_items i ON i.order_id = o.order_id
+  GROUP BY month, yr
+)
+SELECT month, revenue,
+       revenue * 1.0 / SUM(revenue) OVER (PARTITION BY yr) AS share_in_year
+FROM m ORDER BY month;`},
+
+{g:'Оконные функции',t:'Нумерация заказов клиента',tag:'ROW_NUMBER по клиенту',
+ p:'Для каждого заказа выведи его порядковый номер у этого клиента. Колонки customer_id, order_id, purchase_date, order_no. Только клиенты с номером заказа больше 2, сортировка по customer_id и order_no.',
+ n:'Основа для анализа жизненного цикла: первый заказ, второй, третий. Отсюда растут и когорты, и расчёт времени между покупками.',
+ s:`WITH n AS (
+  SELECT customer_id, order_id, purchase_date,
+         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY purchase_date, order_id) AS order_no
+  FROM orders
+)
+SELECT customer_id, order_id, purchase_date, order_no
+FROM n WHERE order_no > 2
+ORDER BY customer_id, order_no;`},
+
+{g:'Продуктовые метрики',t:'Скорость доставки по городам',tag:'даты · AVG',
+ p:'Средний срок доставки в днях по городам клиентов, только доставленные заказы, минимум 10 заказов в городе. Колонки city, n, avg_days — по возрастанию avg_days.',
+ n:'julianday переводит дату в число, и разность двух таких чисел даёт дни. Метрика напрямую связана с оценками в отзывах — ты это уже видел в задаче про просрочку.',
+ s:`SELECT c.city,
+       COUNT(*) AS n,
+       ROUND(AVG(julianday(o.delivered_date) - julianday(o.purchase_date)), 2) AS avg_days
+FROM orders o
+JOIN customers c ON c.customer_id = o.customer_id
+WHERE o.status = 'delivered'
+GROUP BY c.city
+HAVING COUNT(*) >= 10
+ORDER BY avg_days;`},
+
+{g:'Продуктовые метрики',t:'Отмены по месяцам',tag:'доля · тренд',
+ p:'По каждому месяцу посчитай долю отменённых заказов. Колонки month, cancel_rate — по возрастанию месяца.',
+ n:'Контрольная метрика: её смотрят рядом с целевой, чтобы поймать побочный эффект. Выросли заказы, но вместе с ними выросли отмены — значит рост фиктивный.',
+ s:`SELECT strftime('%Y-%m', purchase_date) AS month,
+       AVG(CASE WHEN status = 'canceled' THEN 1.0 ELSE 0 END) AS cancel_rate
+FROM orders
+GROUP BY month
+ORDER BY month;`},
+
+{g:'Продуктовые метрики',t:'Быстрый второй заказ',tag:'окна · даты',
+ p:'Сколько клиентов сделали второй заказ в течение 30 дней после первого? Одна колонка fast_repeat.',
+ n:'Финальная задача: окно, самосоединение по номеру заказа и арифметика дат в одном запросе. Метрика «время до второй покупки» — один из главных показателей здоровья маркетплейса, потому что предсказывает, останется клиент или уйдёт.',
+ s:`WITH n AS (
+  SELECT customer_id, purchase_date,
+         ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY purchase_date, order_id) AS rn
+  FROM orders
+)
+SELECT COUNT(*) AS fast_repeat
+FROM n a
+JOIN n b ON b.customer_id = a.customer_id AND b.rn = 2
+WHERE a.rn = 1 AND julianday(b.purchase_date) - julianday(a.purchase_date) <= 30;`}
+];
+
+/* ============ приложение ============ */
+let db=null, cur=0, done={};
+const $=s=>document.querySelector(s);
+try{ done=JSON.parse(localStorage.getItem('lab_done')||'{}'); }catch(e){ done={}; }
+function save(){ try{ localStorage.setItem('lab_done',JSON.stringify(done)); }catch(e){} }
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-current', x===b?'true':'false'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  $('#v-'+b.dataset.v).classList.add('on');
+  window.scrollTo(0,0);
+});
+
+function sidebar(){
+  const side=$('#side'); side.innerHTML='';
+  let last=null, box=null;
+  TASKS.forEach((t,i)=>{
+    if(t.g!==last){ box=document.createElement('div'); box.className='grp';
+      const h=document.createElement('h3'); h.textContent=t.g; box.appendChild(h); side.appendChild(box); last=t.g; }
+    const b=document.createElement('button');
+    b.className='t-item'+(done[i]?' done':''); b.dataset.i=i;
+    b.setAttribute('aria-current', i===cur?'true':'false');
+    b.innerHTML='<span class="n">'+(i+1)+'</span><span>'+t.t+'</span>';
+    b.onclick=()=>load(i);
+    box.appendChild(b);
+  });
+  $('#cnt').textContent=Object.keys(done).length;
+  $('#tot').textContent=TASKS.length;
+}
+
+function load(i){
+  cur=i; const t=TASKS[i];
+  $('#t-title').textContent=(i+1)+'. '+t.t;
+  $('#t-tag').textContent=t.tag;
+  $('#t-prompt').textContent=t.p;
+  $('#t-note').textContent=t.n;
+  $('#sol').textContent=t.s;
+  $('#editor').value='';
+  $('#verdict').className='verdict';
+  $('#out').innerHTML='';
+  document.querySelectorAll('.t-item').forEach(b=>b.setAttribute('aria-current', +b.dataset.i===i?'true':'false'));
+  if(window.innerWidth<=860) $('.work').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function schema(){
+  const s=[['customers','customer_id, city, state, signup_date'],
+           ['sellers','seller_id, city, state'],
+           ['products','product_id, category, price, weight_g'],
+           ['orders','order_id, customer_id, status, purchase_date, delivered_date, estimated_date'],
+           ['order_items','order_id, item_id, product_id, seller_id, price, freight'],
+           ['reviews','review_id, order_id, score, created_date']];
+  $('#schema').innerHTML=s.map(([n,c])=>'<div class="tbl"><b>'+n+'</b>'+c.split(', ').map(x=>'<span>'+x+'</span>').join('')+'</div>').join('');
+}
+
+function render(res){
+  if(!res || !res.length){ $('#out').innerHTML='<div class="out"><div class="meta">Запрос выполнен, строк нет.</div></div>'; return; }
+  const r=res[0], cap=60;
+  let h='<div class="out"><table><thead><tr>'+r.columns.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>';
+  r.values.slice(0,cap).forEach(row=>{ h+='<tr>'+row.map(v=>'<td>'+(v===null?'—':(typeof v==='number'?(Number.isInteger(v)?v:v.toFixed(3)):v))+'</td>').join('')+'</tr>'; });
+  h+='</tbody></table>';
+  h+='<div class="meta">строк: '+r.values.length+(r.values.length>cap?' (показаны первые '+cap+')':'')+'</div></div>';
+  $('#out').innerHTML=h;
+}
+
+function norm(res){
+  if(!res || !res.length) return '[]';
+  const v=res[0].values.map(r=>r.map(x=>{
+    if(x===null) return 'ø';
+    if(typeof x==='number') return x.toFixed(4);
+    return String(x);
+  }).join('\u0001'));
+  return v.slice().sort().join('\u0002');
+}
+
+function say(ok,msg){ const v=$('#verdict'); v.className='verdict on '+(ok?'good':'bad'); v.textContent=msg; }
+
+function run(check){
+  if(!db){ say(false,'База ещё не поднялась. Обнови страницу.'); return; }
+  const q=$('#editor').value.trim();
+  if(!q){ say(false,'Пустой запрос. Напиши что-нибудь и выполни.'); return; }
+  let res;
+  try{ res=db.exec(q); }
+  catch(e){ say(false,'Ошибка SQL: '+e.message); $('#out').innerHTML=''; return; }
+  render(res);
+  if(!check){ $('#verdict').className='verdict'; return; }
+  let ref;
+  try{ ref=db.exec(TASKS[cur].s); }catch(e){ say(false,'Эталон не выполнился — напиши мне об этом.'); return; }
+  if(norm(res)===norm(ref)){
+    done[cur]=1; save(); sidebar();
+    say(true,'Сходится с эталоном. Загляни в решение: там может быть короче или читаемее.');
+  } else {
+    const a=res&&res[0]?res[0].values.length:0, b=ref[0].values.length;
+    say(false, a!==b ? 'Не сходится. У тебя строк: '+a+', в эталоне: '+b+'. Чаще всего дело в фильтре или в том, что джойн размножил строки.'
+                     : 'Строк столько же, но значения расходятся. Проверь, по той ли колонке считаешь и те ли записи отбираешь.');
+  }
+}
+
+$('#run').onclick=()=>run(true);
+$('#just').onclick=()=>run(false);
+$('#reset').onclick=()=>{ $('#editor').value=''; $('#out').innerHTML=''; $('#verdict').className='verdict'; };
+$('#editor').addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){ e.preventDefault(); run(true); }
+  if(e.key==='Tab'){ e.preventDefault(); const t=e.target,s=t.selectionStart; t.value=t.value.slice(0,s)+'  '+t.value.slice(t.selectionEnd); t.selectionStart=t.selectionEnd=s+2; }
+});
+
+sidebar(); schema(); load(0);
+
+function boot(){
+  if(typeof initSqlJs!=='function'){
+    $('#boot').className='boot err';
+    $('#boot').textContent='Движок базы не загрузился. Задачи, теория и решения работают, но проверка запросов недоступна.';
+    $('#run').disabled=true; $('#just').disabled=true;
+    return;
+  }
+  initSqlJs().then(SQL=>{
+    db=new SQL.Database();
+    db.run(buildSQL());
+    const c=db.exec('SELECT COUNT(*) FROM orders')[0].values[0][0];
+    const it=db.exec('SELECT COUNT(*) FROM order_items')[0].values[0][0];
+    $('#boot').textContent='База готова: '+c+' заказов, '+it+' позиций, 140 клиентов, 70 товаров, 28 продавцов. Ctrl+Enter — выполнить.';
+  }).catch(e=>{
+    $('#boot').className='boot err';
+    $('#boot').textContent='База не поднялась: '+e.message+'. Решения и теория по-прежнему доступны.';
+    $('#run').disabled=true; $('#just').disabled=true;
+  });
+}
+if(document.readyState==='complete') boot(); else window.addEventListener('load',boot);
+</script>
+</body>
+</html>
